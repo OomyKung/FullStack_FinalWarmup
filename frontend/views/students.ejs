@@ -1,0 +1,65 @@
+<%- include("partials/header") %>
+
+<section class="page-grid">
+  <section class="panel form-panel">
+    <div class="panel-header">
+      <p class="eyebrow">Table 1</p>
+      <h2><%= formMode === "edit" ? "Edit Student" : "Add Student" %></h2>
+    </div>
+
+    <form method="post" action="<%= formMode === 'edit' ? `/students/${editStudent.id}?_method=PUT` : '/students' %>">
+      <label>Student Code</label>
+      <input type="text" name="studentCode" value="<%= editStudent ? editStudent.studentCode : '' %>" required>
+
+      <label>Full Name</label>
+      <input type="text" name="fullName" value="<%= editStudent ? editStudent.fullName : '' %>" required>
+
+      <label>Major</label>
+      <input type="text" name="major" value="<%= editStudent ? editStudent.major : '' %>" required>
+
+      <div class="form-actions">
+        <button type="submit"><%= formMode === "edit" ? "Update" : "Create" %></button>
+        <% if (formMode === "edit") { %>
+          <a class="secondary-btn" href="/students">Cancel</a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-header">
+      <p class="eyebrow">Current Data</p>
+      <h2>Students</h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Major</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% students.forEach((student) => { %>
+          <tr>
+            <td><%= student.id %></td>
+            <td><%= student.studentCode %></td>
+            <td><%= student.fullName %></td>
+            <td><%= student.major %></td>
+            <td class="actions-cell">
+              <a class="secondary-btn" href="/students/<%= student.id %>/edit">Edit</a>
+              <form method="post" action="/students/<%= student.id %>?_method=DELETE">
+                <button class="danger-btn" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<%- include("partials/footer") %>

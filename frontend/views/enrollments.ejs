@@ -1,0 +1,88 @@
+<%- include("partials/header") %>
+
+<section class="page-grid">
+  <section class="panel form-panel">
+    <div class="panel-header">
+      <p class="eyebrow">Table 3</p>
+      <h2><%= formMode === "edit" ? "Edit Enrollment" : "Add Enrollment" %></h2>
+    </div>
+
+    <form method="post" action="<%= formMode === 'edit' ? `/enrollments/${editEnrollment.id}?_method=PUT` : '/enrollments' %>">
+      <label>Student</label>
+      <select name="studentId" required>
+        <% students.forEach((student) => { %>
+          <option value="<%= student.id %>" <%= editEnrollment && editEnrollment.studentId === student.id ? 'selected' : '' %>>
+            <%= student.studentCode %> - <%= student.fullName %>
+          </option>
+        <% }) %>
+      </select>
+
+      <label>Subject</label>
+      <select name="subjectId" required>
+        <% subjects.forEach((subject) => { %>
+          <option value="<%= subject.id %>" <%= editEnrollment && editEnrollment.subjectId === subject.id ? 'selected' : '' %>>
+            <%= subject.subjectCode %> - <%= subject.title %>
+          </option>
+        <% }) %>
+      </select>
+
+      <label>Semester</label>
+      <input type="text" name="semester" value="<%= editEnrollment ? editEnrollment.semester : '1/2026' %>" required>
+
+      <label>Grade</label>
+      <select name="grade" required>
+        <% ["A", "B+", "B", "C+", "C", "D+", "D", "F"].forEach((grade) => { %>
+          <option value="<%= grade %>" <%= editEnrollment && editEnrollment.grade === grade ? 'selected' : '' %>>
+            <%= grade %>
+          </option>
+        <% }) %>
+      </select>
+
+      <div class="form-actions">
+        <button type="submit"><%= formMode === "edit" ? "Update" : "Create" %></button>
+        <% if (formMode === "edit") { %>
+          <a class="secondary-btn" href="/enrollments">Cancel</a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-header">
+      <p class="eyebrow">Relation Table</p>
+      <h2>Enrollments</h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Student</th>
+          <th>Subject</th>
+          <th>Semester</th>
+          <th>Grade</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% enrollments.forEach((enrollment) => { %>
+          <tr>
+            <td><%= enrollment.id %></td>
+            <td><%= enrollment.Student.studentCode %> - <%= enrollment.Student.fullName %></td>
+            <td><%= enrollment.Subject.subjectCode %> - <%= enrollment.Subject.title %></td>
+            <td><%= enrollment.semester %></td>
+            <td><%= enrollment.grade %></td>
+            <td class="actions-cell">
+              <a class="secondary-btn" href="/enrollments/<%= enrollment.id %>/edit">Edit</a>
+              <form method="post" action="/enrollments/<%= enrollment.id %>?_method=DELETE">
+                <button class="danger-btn" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<%- include("partials/footer") %>

@@ -1,0 +1,65 @@
+<%- include("partials/header") %>
+
+<section class="page-grid">
+  <section class="panel form-panel">
+    <div class="panel-header">
+      <p class="eyebrow">Table 2</p>
+      <h2><%= formMode === "edit" ? "Edit Subject" : "Add Subject" %></h2>
+    </div>
+
+    <form method="post" action="<%= formMode === 'edit' ? `/subjects/${editSubject.id}?_method=PUT` : '/subjects' %>">
+      <label>Subject Code</label>
+      <input type="text" name="subjectCode" value="<%= editSubject ? editSubject.subjectCode : '' %>" required>
+
+      <label>Title</label>
+      <input type="text" name="title" value="<%= editSubject ? editSubject.title : '' %>" required>
+
+      <label>Credits</label>
+      <input type="number" name="credits" min="1" value="<%= editSubject ? editSubject.credits : 3 %>" required>
+
+      <div class="form-actions">
+        <button type="submit"><%= formMode === "edit" ? "Update" : "Create" %></button>
+        <% if (formMode === "edit") { %>
+          <a class="secondary-btn" href="/subjects">Cancel</a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-header">
+      <p class="eyebrow">Current Data</p>
+      <h2>Subjects</h2>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Credits</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% subjects.forEach((subject) => { %>
+          <tr>
+            <td><%= subject.id %></td>
+            <td><%= subject.subjectCode %></td>
+            <td><%= subject.title %></td>
+            <td><%= subject.credits %></td>
+            <td class="actions-cell">
+              <a class="secondary-btn" href="/subjects/<%= subject.id %>/edit">Edit</a>
+              <form method="post" action="/subjects/<%= subject.id %>?_method=DELETE">
+                <button class="danger-btn" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<%- include("partials/footer") %>

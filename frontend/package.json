@@ -1,0 +1,20 @@
+{
+  "name": "school-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for a school enrollment app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "method-override": "^3.0.0"
+  }
+}

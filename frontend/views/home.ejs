@@ -1,0 +1,33 @@
+<%- include("partials/header") %>
+
+<section class="hero">
+  <div>
+    <p class="eyebrow">Separate services</p>
+    <h2>Frontend on port 3001, backend API on port 3000.</h2>
+    <p class="hero-copy">
+      This app uses EJS and CSS on the frontend, Express APIs on the backend,
+      and SQLite with Sequelize for the database.
+    </p>
+  </div>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card">
+    <span>Total Students</span>
+    <strong><%= stats.students %></strong>
+  </article>
+  <article class="stat-card">
+    <span>Total Subjects</span>
+    <strong><%= stats.subjects %></strong>
+  </article>
+  <article class="stat-card">
+    <span>Total Enrollments</span>
+    <strong><%= stats.enrollments %></strong>
+  </article>
+  <article class="stat-card">
+    <span>Report Rows</span>
+    <strong><%= stats.reports %></strong>
+  </article>
+</section>
+
+<%- include("partials/footer") %>

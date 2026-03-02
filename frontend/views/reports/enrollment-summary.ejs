@@ -1,0 +1,54 @@
+<%- include("../partials/header") %>
+
+<section class="panel report-panel">
+  <div class="panel-header">
+    <p class="eyebrow">One Report</p>
+    <h2>Enrollment Summary by Subject</h2>
+  </div>
+
+  <div class="report-stack">
+    <% report.forEach((item) => { %>
+      <article class="report-card">
+        <div class="report-title-row">
+          <div>
+            <h3><%= item.subjectCode %> - <%= item.title %></h3>
+            <p><%= item.credits %> credits</p>
+          </div>
+          <div class="report-badges">
+            <span>Total: <%= item.enrollmentCount %></span>
+            <span>Pass: <%= item.passedCount %></span>
+            <span>Fail: <%= item.failedCount %></span>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Student Code</th>
+              <th>Student Name</th>
+              <th>Semester</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (item.students.length === 0) { %>
+              <tr>
+                <td colspan="4">No enrollments yet</td>
+              </tr>
+            <% } %>
+            <% item.students.forEach((student) => { %>
+              <tr>
+                <td><%= student.studentCode %></td>
+                <td><%= student.studentName %></td>
+                <td><%= student.semester %></td>
+                <td><%= student.grade %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<%- include("../partials/footer") %>

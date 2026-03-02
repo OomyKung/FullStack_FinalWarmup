@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-block">
+      <p class="eyebrow">School Enrollment Manager</p>
+      <h1>Full Stack Final Warmup</h1>
+    </div>
+    <nav class="site-nav">
+      <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/">Dashboard</a>
+      <a class="<%= currentPath.startsWith('/students') ? 'active' : '' %>" href="/students">Students</a>
+      <a class="<%= currentPath.startsWith('/subjects') ? 'active' : '' %>" href="/subjects">Subjects</a>
+      <a class="<%= currentPath.startsWith('/enrollments') ? 'active' : '' %>" href="/enrollments">Enrollments</a>
+      <a class="<%= currentPath.startsWith('/reports') ? 'active' : '' %>" href="/reports/enrollment-summary">Report</a>
+    </nav>
+  </header>
+  <main class="page-shell">
