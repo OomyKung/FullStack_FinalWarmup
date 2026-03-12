@@ -12,6 +12,7 @@ const execAsync = promisify(exec);
 
 // Define all jobs to generate PDFs
 const PDF_JOBS = [
+  { inputDir: ".", outputFile: "Configuration_Environment.pdf", extensions: [".env"] },
   { inputDir: ".", outputFile: "Backend_API_Server.pdf", extensions: ["app.js"] },
   { inputDir: ".", outputFile: "Frontend_Web_Server.pdf", extensions: ["frontend-server.js"] },
   { inputDir: "views", outputFile: "Frontend_EJS_Templates.pdf", extensions: [".ejs"] },
@@ -83,7 +84,9 @@ async function generateFileExplanation(filePath, fileName) {
   const code = await fs.readFile(filePath, "utf-8");
   const extension = fileName.split(".").pop();
 
-  if (extension === "css") {
+  if (fileName === ".env" || extension === "env") {
+    return generateEnvExplanation(code, fileName);
+  } else if (extension === "css") {
     return generateCssExplanation(code, fileName);
   } else if (extension === "ejs") {
     return generateEjsExplanation(code, fileName, filePath);
@@ -96,6 +99,9 @@ async function generateFileExplanation(filePath, fileName) {
 
 // Detect file type/purpose for context-aware explanations
 function detectFileType(fileName, filePath) {
+  if (fileName === ".env") {
+    return "env-config";
+  }
   if (fileName === "frontend-server.js") {
     return "frontend-server";
   }
@@ -113,6 +119,168 @@ function detectFileType(fileName, filePath) {
   if (fileName.includes("seed")) return "seed";
   if (filePath.includes("views")) return "view";
   return "other";
+}
+
+// Analyze .env file and generate explanation
+function generateEnvExplanation(code, fileName) {
+  const lines = code.split("\n").filter(line => line.trim() && !line.trim().startsWith("#"));
+  const variables = lines.map(line => line.split("=")[0].trim()).filter(v => v);
+  const hasBackendPort = code.includes("BACKEND_PORT");
+  const hasFrontendPort = code.includes("FRONTEND_PORT");
+  const hasBackendUrl = code.includes("BACKEND_URL");
+  const hasFrontendUrl = code.includes("FRONTEND_URL");
+  const hasDbPath = code.includes("DB_PATH");
+
+  let explanation = `ENVIRONMENT CONFIGURATION - Settings for running the application.\n\n`;
+  
+  explanation += `WHAT IS .env?\n`;
+  explanation += `.env is a configuration file that stores settings your application needs to run.\n`;
+  explanation += `These settings are kept in ONE PLACE so you can change them without editing code.\n`;
+  explanation += `IMPORTANT: .env should be added to .gitignore to keep sensitive info private.\n\n`;
+
+  explanation += `WHY SEPARATE PORTS?\n`;
+  explanation += `This application uses a SEPARATED ARCHITECTURE with TWO servers:\n`;
+  explanation += `- One for the Frontend (what users see)\n`;
+  explanation += `- One for the Backend (API that powers the frontend)\n`;
+  explanation += `They need different ports because they're independent processes.\n\n`;
+
+  explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+  explanation += `ARCHITECTURE DIAGRAM\n`;
+  explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+
+  explanation += `┌──────────────────────────────────────────────────────────────────────┐\n`;
+  explanation += `│                         YOUR COMPUTER                               │\n`;
+  explanation += `│                                                                      │\n`;
+  explanation += `│  Port 3001 (FRONTEND)              Port 3000 (BACKEND)              │\n`;
+  explanation += `│  ┌──────────────────┐              ┌──────────────────┐            │\n`;
+  explanation += `│  │ frontend-server  │   HTTP       │   app.js (API)   │            │\n`;
+  explanation += `│  │ .js              │◄────────────►│                  │            │\n`;
+  explanation += `│  │                  │   Requests   │  Handles logic,  │            │\n`;
+  explanation += `│  │  Shows Web Pages │   & Data     │  database, etc   │            │\n`;
+  explanation += `│  │  to User         │              │                  │            │\n`;
+  explanation += `│  └──────────────────┘              └──────────────────┘            │\n`;
+  explanation += `│           ↑                                 ↓                        │\n`;
+  explanation += `│        Browser                        SQLite Database              │\n`;
+  explanation += `│    (User sees this)                  (Stores data)                 │\n`;
+  explanation += `└──────────────────────────────────────────────────────────────────────┘\n\n`;
+
+  explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+  explanation += `ENVIRONMENT VARIABLES EXPLAINED\n`;
+  explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+
+  if (hasBackendPort) {
+    explanation += `1. BACKEND_PORT=3000\n`;
+    explanation += `   ────────────────────\n`;
+    explanation += `   WHERE IT'S USED: app.js (the backend API server)\n`;
+    explanation += `   WHAT IT DOES: Tells the backend to listen for requests on port 3000\n`;
+    explanation += `   WHY 3000: Random choice, any port 3000-9000 would work\n`;
+    explanation += `   EXAMPLE: http://localhost:3000 is where the API runs\n`;
+    explanation += `   IN CODE: app.listen(process.env.BACKEND_PORT)\n\n`;
+  }
+
+  if (hasFrontendPort) {
+    explanation += `2. FRONTEND_PORT=3001\n`;
+    explanation += `   ────────────────────\n`;
+    explanation += `   WHERE IT'S USED: frontend-server.js (the web server you see)\n`;
+    explanation += `   WHAT IT DOES: Tells the frontend to listen for your browser on port 3001\n`;
+    explanation += `   WHY 3001: Different from backend (3000) so they don't conflict\n`;
+    explanation += `   EXAMPLE: http://localhost:3001 is where you open in your browser\n`;
+    explanation += `   IN CODE: frontendServer.listen(process.env.FRONTEND_PORT)\n\n`;
+  }
+
+  if (hasBackendUrl) {
+    explanation += `3. BACKEND_URL=http://localhost:3000\n`;
+    explanation += `   ──────────────────────────────────\n`;
+    explanation += `   WHERE IT'S USED: frontend-server.js and view files\n`;
+    explanation += `   WHAT IT DOES: Tells frontend WHERE the API server is located\n`;
+    explanation += `   HOW IT'S USED: Frontend makes API calls to this address\n`;
+    explanation += `   EXAMPLE CODE: axios.get(BACKEND_URL + '/api/students')\n`;
+    explanation += `   IN EJS VIEWS: <% const backendUrl = BACKEND_URL %>\n\n`;
+  }
+
+  if (hasFrontendUrl) {
+    explanation += `4. FRONTEND_URL=http://localhost:3001\n`;
+    explanation += `   ──────────────────────────────────\n`;
+    explanation += `   WHERE IT'S USED: CORS configuration in app.js\n`;
+    explanation += `   WHAT IT DOES: Tells backend which frontend is allowed to call it\n`;
+    explanation += `   WHY NEEDED: Security - prevents other websites from using your API\n`;
+    explanation += `   IN CODE: cors({ origin: process.env.FRONTEND_URL })\n\n`;
+  }
+
+  if (hasDbPath) {
+    explanation += `5. DB_PATH=./database/database.sqlite\n`;
+    explanation += `   ───────────────────────────────────\n`;
+    explanation += `   WHERE IT'S USED: Database initialization in models/index.js\n`;
+    explanation += `   WHAT IT DOES: Tells where to store the database file\n`;
+    explanation += `   HOW SQLITE WORKS: All data stored in ONE file (database.sqlite)\n`;
+    explanation += `   PATH MEANING: ./database/ = subfolder, database.sqlite = filename\n\n`;
+  }
+
+  explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+  explanation += `HOW TO USE THIS FILE\n`;
+  explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+  
+  explanation += `STEP 1: Create the file\n`;
+  explanation += `Create a file named '.env' in the project root folder\n`;
+  explanation += `(same folder as package.json)\n\n`;
+
+  explanation += `STEP 2: Add these variables\n`;
+  explanation += `Copy the environment variables into your .env file\n\n`;
+
+  explanation += `STEP 3: Run the servers\n`;
+  explanation += `Run this command to start both servers:\n`;
+  explanation += `  npm run dev\n\n`;
+
+  explanation += `STEP 4: Access the application\n`;
+  explanation += `- Open http://localhost:3001 in your browser\n`;
+  explanation += `- The frontend (port 3001) will load\n`;
+  explanation += `- It automatically calls the backend (port 3000) for data\n`;
+  explanation += `- Users never see port 3000 directly\n\n`;
+
+  explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+  explanation += `DATA FLOW EXAMPLE: Getting List of Students\n`;
+  explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+
+  explanation += `1. YOU (User) open browser → http://localhost:3001\n`;
+  explanation += `                             ↓\n`;
+  explanation += `2. FRONTEND SERVER (port 3001)\n`;
+  explanation += `   - Loads students.ejs template\n`;
+  explanation += `   - Sees BACKEND_URL = http://localhost:3000\n`;
+  explanation += `                             ↓\n`;
+  explanation += `3. FRONTEND SENDS REQUEST to BACKEND\n`;
+  explanation += `   axios.get(http://localhost:3000/api/students)\n`;
+  explanation += `                             ↓\n`;
+  explanation += `4. BACKEND SERVER (port 3000)\n`;
+  explanation += `   - Checks CORS (confirms request is from port 3001)\n`;
+  explanation += `   - Queries database at DB_PATH location\n`;
+  explanation += `   - Gets student records from database.sqlite\n`;
+  explanation += `                             ↓\n`;
+  explanation += `5. BACKEND SENDS RESPONSE\n`;
+  explanation += `   Returns JSON data: [{id: 1, name: \"John\"}, ...]\n`;
+  explanation += `                             ↓\n`;
+  explanation += `6. FRONTEND RECEIVES DATA\n`;
+  explanation += `   - Processes the student data\n`;
+  explanation += `   - Renders it in HTML with EJS\n`;
+  explanation += `                             ↓\n`;
+  explanation += `7. YOU SEE the web page with student list!\n\n`;
+
+  explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+  explanation += `SUMMARY\n`;
+  explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+
+  explanation += `The .env file is like the "control center" of your application.\n`;
+  explanation += `It stores all the settings in one place:\n\n`;
+  explanation += `✓ Port 3000 = Backend runs here\n`;
+  explanation += `✓ Port 3001 = Frontend runs here\n`;
+  explanation += `✓ URLs tell servers how to find each other\n`;
+  explanation += `✓ DB_PATH tells where data is stored\n\n`;
+
+  explanation += `Without .env, you'd have to change these values in your code every time.\n`;
+  explanation += `With .env, just edit this one file!\n\n`;
+
+  explanation += `Total environment variables: ${variables.length}`;
+
+  return explanation;
 }
 
 // Analyze CSS file and generate explanation
