@@ -13,6 +13,7 @@ const execAsync = promisify(exec);
 // Define all jobs to generate PDFs
 const PDF_JOBS = [
   { inputDir: ".", outputFile: "Configuration_Environment.pdf", extensions: [".env"] },
+  { inputDir: ".", outputFile: "Project_Configuration.pdf", extensions: ["package.json"] },
   { inputDir: ".", outputFile: "Backend_API_Server.pdf", extensions: ["app.js"] },
   { inputDir: ".", outputFile: "Frontend_Web_Server.pdf", extensions: ["frontend-server.js"] },
   { inputDir: "views", outputFile: "Frontend_EJS_Templates.pdf", extensions: [".ejs"] },
@@ -86,6 +87,8 @@ async function generateFileExplanation(filePath, fileName) {
 
   if (fileName === ".env" || extension === "env") {
     return generateEnvExplanation(code, fileName);
+  } else if (extension === "json") {
+    return generateJsonExplanation(code, fileName);
   } else if (extension === "css") {
     return generateCssExplanation(code, fileName);
   } else if (extension === "ejs") {
@@ -323,6 +326,199 @@ function generateCssExplanation(code, fileName) {
 
   const lineCount = code.split("\n").length;
   explanation += `\nTotal lines of code: ${lineCount}`;
+
+  return explanation;
+}
+
+// Analyze JSON file and generate explanation
+function generateJsonExplanation(code, fileName) {
+  let explanation = ``;
+  let jsonData = {};
+  
+  try {
+    jsonData = JSON.parse(code);
+  } catch (error) {
+    return `Invalid JSON file: ${error.message}\n\nRaw content:\n${code}`;
+  }
+
+  if (fileName === "package.json") {
+    explanation = `PROJECT CONFIGURATION - package.json\n\n`;
+    explanation += `WHAT IS package.json?\n`;
+    explanation += `This is the configuration file that defines your Node.js project.\n`;
+    explanation += `It tells npm (Node Package Manager) how to manage your project and dependencies.\n\n`;
+
+    explanation += `KEY INFORMATION IN package.json:\n\n`;
+
+    if (jsonData.name) {
+      explanation += `1. NAME: "${jsonData.name}"\n`;
+      explanation += `   - The official name of your project\n`;
+      explanation += `   - Used when publishing to npm registry\n`;
+      explanation += `   - Should be lowercase and hyphenated\n\n`;
+    }
+
+    if (jsonData.version) {
+      explanation += `2. VERSION: "${jsonData.version}"\n`;
+      explanation += `   - Current version of your project\n`;
+      explanation += `   - Follows Semantic Versioning (MAJOR.MINOR.PATCH)\n`;
+      explanation += `   - Incremented when making releases\n\n`;
+    }
+
+    if (jsonData.description) {
+      explanation += `3. DESCRIPTION: "${jsonData.description}"\n`;
+      explanation += `   - Brief description of what the project does\n`;
+      explanation += `   - Shown on npm package page\n\n`;
+    }
+
+    if (jsonData.main) {
+      explanation += `4. MAIN: "${jsonData.main}"\n`;
+      explanation += `   - Entry point of your application\n`;
+      explanation += `   - This file is loaded when someone requires your package\n`;
+      explanation += `   - In this project: ${jsonData.main}\n\n`;
+    }
+
+    explanation += `5. SCRIPTS: npm commands you can run\n`;
+    if (jsonData.scripts && Object.keys(jsonData.scripts).length > 0) {
+      explanation += `\n   Available scripts:\n`;
+      Object.entries(jsonData.scripts).forEach(([name, command]) => {
+        explanation += `   ✓ npm run ${name}\n`;
+        explanation += `     Command: ${command}\n`;
+      });
+      explanation += `\n   HOW TO USE:\n`;
+      explanation += `   Type in terminal: npm run <script-name>\n`;
+      explanation += `   Example: npm run dev\n`;
+      explanation += `   This will execute the command defined for that script\n\n`;
+    }
+
+    explanation += `6. DEPENDENCIES\n`;
+    if (jsonData.dependencies && Object.keys(jsonData.dependencies).length > 0) {
+      explanation += `\n   Packages required for the application to run (Production):\n\n`;
+      const depCount = Object.keys(jsonData.dependencies).length;
+      explanation += `   Total: ${depCount} packages\n\n`;
+      
+      Object.entries(jsonData.dependencies).forEach(([name, version]) => {
+        explanation += `   • ${name}@${version}\n`;
+        
+        // Add explanations for common packages
+        if (name === "express") {
+          explanation += `     → Web server framework for building APIs and web applications\n`;
+        } else if (name === "sequelize") {
+          explanation += `     → ORM (Object-Relational Mapping) for interacting with databases\n`;
+        } else if (name === "sqlite3") {
+          explanation += `     → SQLite database driver for Node.js\n`;
+        } else if (name === "cors") {
+          explanation += `     → Enable Cross-Origin Resource Sharing (Frontend-Backend communication)\n`;
+        } else if (name === "dotenv") {
+          explanation += `     → Load environment variables from .env file\n`;
+        } else if (name === "ejs") {
+          explanation += `     → Templating engine for rendering dynamic HTML views\n`;
+        } else if (name === "axios") {
+          explanation += `     → HTTP client for making API requests\n`;
+        } else if (name === "method-override") {
+          explanation += `     → Enable PUT/DELETE methods in HTML forms\n`;
+        } else if (name === "pdf-lib") {
+          explanation += `     → Create and manipulate PDF documents\n`;
+        }
+      });
+      explanation += `\n   WHAT THEY DO:\n`;
+      explanation += `   These are external libraries (like tools) that your project uses.\n`;
+      explanation += `   They provide pre-built functionality so you don't code everything from scratch.\n\n`;
+    }
+
+    explanation += `7. HOW npm WORKS\n\n`;
+    explanation += `   INSTALLATION:\n`;
+    explanation += `   npm install\n`;
+    explanation += `   - Reads package.json\n`;
+    explanation += `   - Downloads all dependencies from npm registry\n`;
+    explanation += `   - Saves them in node_modules/ folder\n`;
+    explanation += `   - Creates package-lock.json (locks exact versions)\n\n`;
+
+    explanation += `   VERSION NOTATION:\n`;
+    explanation += `   • ^1.0.0 = Allow patches and minor updates but not major\n`;
+    explanation += `   • ~1.0.0 = Allow only patch updates\n`;
+    explanation += `   • 1.0.0  = Exact version required\n`;
+    explanation += `   • *      = Any version\n\n`;
+
+    explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+    explanation += `PROJECT STRUCTURE BASED ON PACKAGE.json\n`;
+    explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+    
+    explanation += `This is a FULL-STACK application with:\n\n`;
+    explanation += `BACKEND (Port 3000):\n`;
+    explanation += `  - Express server (app.js)\n`;
+    explanation += `  - Sequelize ORM for database\n`;
+    explanation += `  - SQLite database storage\n`;
+    explanation += `  - CORS enabled for Frontend communication\n\n`;
+
+    explanation += `FRONTEND (Port 3001):\n`;
+    explanation += `  - Express server (frontend-server.js)\n`;
+    explanation += `  - EJS templating engine\n`;
+    explanation += `  - Axios for API calls to Backend\n`;
+    explanation += `  - Method-override for PUT/DELETE support\n\n`;
+
+    explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+    explanation += `FILE TREE\n`;
+    explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+    
+    explanation += `project/\n`;
+    explanation += `├── package.json           ← You are here! Configuration file\n`;
+    explanation += `├── app.js                 ← Backend API (Port 3000)\n`;
+    explanation += `├── frontend-server.js    ← Frontend Web (Port 3001)\n`;
+    explanation += `├── controllers/           ← Business logic\n`;
+    explanation += `├── models/                ← Database schemas\n`;
+    explanation += `├── routes/                ← API endpoints\n`;
+    explanation += `├── views/                 ← EJS HTML templates\n`;
+    explanation += `├── public/                ← Static files (CSS, images)\n`;
+    explanation += `├── database/              ← Database seed script\n`;
+    explanation += `└── node_modules/          ← All dependencies (ignored in git)\n\n`;
+
+    explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+    explanation += `RUNNING THE PROJECT\n`;
+    explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+    
+    explanation += `STEP 1: Install dependencies\n`;
+    explanation += `  npm install\n\n`;
+
+    explanation += `STEP 2: Run the application\n`;
+    explanation += `  npm start        (runs everything)\n`;
+    explanation += `  npm run dev      (development mode)\n`;
+    explanation += `  npm run backend  (backend only)\n`;
+    explanation += `  npm run frontend (frontend only)\n\n`;
+
+    explanation += `STEP 3: Access in browser\n`;
+    explanation += `  http://localhost:3001\n\n`;
+
+    explanation += `═══════════════════════════════════════════════════════════════════════\n`;
+    explanation += `SUMMARY\n`;
+    explanation += `═══════════════════════════════════════════════════════════════════════\n\n`;
+    
+    explanation += `package.json is the "blueprint" of your project.\n\n`;
+    explanation += `It tells npm:\n`;
+    explanation += `✓ What project this is\n`;
+    explanation += `✓ What version it's at\n`;
+    explanation += `✓ What dependencies it needs\n`;
+    explanation += `✓ What scripts you can run\n`;
+    explanation += `✓ How to start the application\n\n`;
+
+    explanation += `Total dependencies: ${Object.keys(jsonData.dependencies || {}).length}\n`;
+    explanation += `Total available scripts: ${Object.keys(jsonData.scripts || {}).length}`;
+  } else {
+    // Generic JSON file explanation
+    explanation = `JSON CONFIGURATION FILE - ${fileName}\n\n`;
+    explanation += `WHAT IS JSON?\n`;
+    explanation += `JSON (JavaScript Object Notation) is a format for storing and exchanging data.\n`;
+    explanation += `It uses key-value pairs organized in a structured, readable format.\n\n`;
+
+    explanation += `FILE CONTENTS:\n`;
+    explanation += `Keys: ${Object.keys(jsonData).length} main properties\n\n`;
+    
+    Object.entries(jsonData).forEach(([key, value]) => {
+      const valueType = Array.isArray(value) ? "array" : typeof value;
+      explanation += `• ${key} (${valueType})\n`;
+    });
+
+    explanation += `\nRAW JSON:\n`;
+    explanation += JSON.stringify(jsonData, null, 2);
+  }
 
   return explanation;
 }
